@@ -1,0 +1,20 @@
+# Sensitive config (contains passwords & API keys)
+config/firebase_credentials.json
+config/gemini.php
+
+# Dependencies (can be reinstalled with composer install)
+vendor/
+
+# Uploaded files (user data, not code)
+uploads/
+
+# macOS system files
+.DS_Store
+
+# Test files
+test_*.php
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.swp

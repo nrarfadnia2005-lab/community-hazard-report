@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community Hazard Map</title>
+    <link rel="icon" type="image/png" href="../assets/images/LOGO.png?v=4">
+    <link rel="shortcut icon" type="image/png" href="../assets/images/LOGO.png?v=4">
+    <link rel="apple-touch-icon" href="../assets/images/LOGO.png?v=4">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --primary: #FF6B6B;
+            --surface: #ffffff;
+            --text: #212529;
+            --muted: #6c757d;
+            --border: rgba(0, 0, 0, 0.1);
+            --green: #4CAF50;
+            --yellow: #FFC107;
+            --blue: #2196F3;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8f9fa;
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+        }
+
+        .topbar h1 {
+            font-size: 18px;
+        }
+
+        .topbar h1 span {
+            color: var(--primary);
+        }
+
+        .topbar-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 14px;
+            margin-left: 16px;
+        }
+
+        .topbar-links a:hover {
+            color: var(--primary);
+        }
+
+        .map-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        .filter-panel {
+            position: absolute;
+            top: 12px;
+            left: 55px;
+            z-index: 1000;
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            min-width: 220px;
+            max-height: calc(100% - 100px);
+            overflow-y: auto;
+        }
+
+        .filter-panel h3 {
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .filter-btn {
+            display: block;
+            width: 100%;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--muted);
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            text-align: left;
+            transition: all .2s;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 30px;
+            right: 16px;
+            z-index: 1000;
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .legend h4 {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .stats-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .stats-badge .num {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stats-badge .label {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        /* Leaflet popup styling */
+        .leaflet-popup-content-wrapper {
+            background: #ffffff !important;
+            color: #212529 !important;
+            border-radius: 12px !important;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .leaflet-popup-tip {
+            background: #ffffff !important;
+        }
+
+        .popup-content {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .popup-content h4 {
+            color: var(--primary);
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .popup-content p {
+            font-size: 12px;
+            color: #495057;
+            margin: 2px 0;
+        }
+
+        .popup-content .status {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Custom scrollbar for filter panel */
+        .filter-panel::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .filter-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .filter-panel::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .filter-panel:hover::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="topbar">
+        <h1> <span>Community</span> Hazard Map</h1>
+        <div class="topbar-links">
+            <a href="../index.html">← Login</a>
+            <a href="track_report.html"> Track Report</a>
+        </div>
+    </div>
+
+    <div class="map-wrapper">
+        <div id="map"></div>
+
+        <div class="filter-panel" id="filterPanel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="margin:0;"> Filter</h3>
+                <button onclick="toggleFilter()"
+                    style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:12px;">✕</button>
+            </div>
+            <div id="filterContent">
+                <button class="filter-btn active" onclick="filterMap('all', this)">All Hazards</button>
+                <div id="categoryFilters"></div>
+            </div>
+        </div>
+
+        <button id="showFilterBtn" class="filter-panel"
+            style="display:none; top:12px; left:55px; padding:8px 16px; cursor:pointer; width:auto; min-width:auto;"
+            onclick="toggleFilter()">
+            Show Filters
+        </button>
+
+        <div class="stats-badge">
+            <div class="num" id="pinCount">0</div>
+            <div class="label">Reports Pinned</div>
+        </div>
+
+        <div class="legend">
+            <h4>Map Legend</h4>
+            <div class="legend-item">
+                <div class="legend-dot" style="background:var(--blue)"></div> Received
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background:var(--yellow)"></div> Investigating
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background:var(--green)"></div> Resolved
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background:var(--primary);border:2px dashed #fff;"></div> Alert Zone
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background:#9E9E9E"></div> Deleted
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleFilter() {
+            const panel = document.getElementById('filterPanel');
+            const btn = document.getElementById('showFilterBtn');
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+                btn.style.display = 'none';
+            } else {
+                panel.style.display = 'none';
+                btn.style.display = 'block';
+            }
+        }
+        let map, allPins = [], allAlerts = [], markers = [];
+
+        function initMap() {
+            map = L.map('map').setView([3.139, 101.6869], 11);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: ' OpenStreetMap contributors',
+                maxZoom: 18
+            }).addTo(map);
+            loadPins();
+        }
+
+        async function loadPins() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const district = urlParams.get('district') || '';
+                const state = urlParams.get('state') || '';
+                const r = await fetch(`../api/map/pins.php?district=${encodeURIComponent(district)}&state=${encodeURIComponent(state)}`);
+                const d = await r.json();
+                if (!d.success) return;
+
+                allPins = d.pins;
+                allAlerts = d.alerts;
+                document.getElementById('pinCount').textContent = allPins.length;
+
+                // Build category filters
+                if (d.categories && d.categories.length > 0) {
+                    document.getElementById('categoryFilters').innerHTML = d.categories.map(c =>
+                        `<button class="filter-btn" onclick="filterMap('${c}', this)">${c}</button>`
+                    ).join('');
+                }
+
+                renderPins(allPins);
+                renderAlerts(allAlerts);
+            } catch (e) { console.error(e); }
+        }
+
+        function getStatusColor(status) {
+            switch (status) {
+                case 'Received': return '#2196F3';
+                case 'Investigating': return '#FFC107';
+                case 'Resolved': return '#4CAF50';
+                default: return '#999';
+            }
+        }
+
+        function renderPins(pins) {
+            // Clear existing markers
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            pins.forEach(pin => {
+                const color = getStatusColor(pin.status);
+                const icon = L.divIcon({
+                    className: 'custom-pin',
+                    html: `<div style="width:14px;height:14px;background:${color};border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>`,
+                    iconSize: [14, 14],
+                    iconAnchor: [7, 7]
+                });
+
+                const statusBg = pin.status === 'Received' ? 'rgba(33,150,243,0.2)' :
+                    pin.status === 'Investigating' ? 'rgba(255,193,7,0.2)' : 'rgba(76,175,80,0.2)';
+
+                const m = L.marker([pin.latitude, pin.longitude], { icon })
+                    .bindPopup(`<div class="popup-content">
+                ${pin.photo_file ? `<img src="../uploads/reports/${pin.photo_file}" style="width:100%; height:120px; object-fit:cover; border-radius:8px; margin-bottom:8px;">` : ''}
+                <h4>${pin.report_subject}</h4>
+                <p> ${pin.hazard_category || 'N/A'}</p>
+                <p> ${pin.district || 'N/A'}</p>
+                <p> ${new Date(pin.created_at).toLocaleDateString()}</p>
+                <p style="margin-top:6px;"><span class="status" style="background:${statusBg};color:${color};">${pin.status}</span></p>
+                ${pin.description_text ? `<p style="margin-top:8px;font-size:11px;color:#aaa;">${pin.description_text.substring(0, 120)}...</p>` : ''}
+                <p style="margin-top:6px;"><a href="track_report.html" style="color:#FF6B6B;font-size:12px;">Track: ${pin.report_id}</a></p>
+            </div>`, { maxWidth: 260 })
+                    .addTo(map);
+                markers.push(m);
+            });
+        }
+
+        function renderAlerts(alerts) {
+            alerts.forEach(alert => {
+                if (!alert.latitude || !alert.longitude) return;
+                const radius = (alert.location_radius || 500);
+
+                const circle = L.circle([alert.latitude, alert.longitude], {
+                    radius: radius,
+                    color: '#EB1C24',
+                    fillColor: '#EB1C24',
+                    fillOpacity: 0.3,
+                    dashArray: '5,10',
+                    weight: 2
+                }).bindPopup(`<div class="popup-content">
+            <h4> ${alert.alert_subject || 'Hazard Alert'}</h4>
+            <p> ${alert.hazard_category || 'N/A'}</p>
+            <p> ${alert.district || 'N/A'}</p>
+            ${alert.advice_text ? `<p style="margin-top:8px;padding:8px;background:rgba(255,193,7,0.1);border-radius:6px;font-size:12px;color:#FFC107;"> ${alert.advice_text}</p>` : ''}
+        </div>`).addTo(map);
+                markers.push(circle);
+            });
+        }
+
+        function filterMap(category, el) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+
+            const filtered = category === 'all' ? allPins : allPins.filter(p => p.hazard_category === category);
+            document.getElementById('pinCount').textContent = filtered.length;
+            renderPins(filtered);
+            // Always show alerts
+            renderAlerts(allAlerts);
+        }
+
+        initMap();
+
+        // Check for embed mode
+        if (window.location.search.includes('embed=true')) {
+            document.querySelector('.topbar').style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>

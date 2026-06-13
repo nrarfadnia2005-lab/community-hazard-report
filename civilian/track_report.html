@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Report - Community Hazard Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6B6B;
+            --bg: #f8f9fa;
+            --surface: #ffffff;
+            --text: #212529;
+            --muted: #6c757d;
+            --border: rgba(0, 0, 0, 0.1);
+            --green: #4CAF50;
+            --yellow: #FFC107;
+            --blue: #2196F3;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 32px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .topbar h1 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .topbar h1 span {
+            color: var(--primary);
+        }
+
+        .topbar a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .topbar a:hover {
+            color: var(--primary);
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 0 20px;
+            flex: 1;
+        }
+
+        .search-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .search-box h2 {
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        .search-box p {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .search-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input input {
+            flex: 1;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 18px;
+            color: var(--text);
+            font-size: 16px;
+            font-family: inherit;
+            outline: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .search-input input:focus {
+            border-color: var(--primary);
+        }
+
+        .search-input button {
+            padding: 14px 28px;
+            border-radius: 12px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .search-input button:hover {
+            background: #FF5252;
+        }
+
+        .result {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            animation: fadeIn .4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result h3 {
+            margin-bottom: 16px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .info-row .label {
+            color: var(--muted);
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-received {
+            background: rgba(33, 150, 243, 0.15);
+            color: var(--blue);
+        }
+
+        .badge-investigating {
+            background: rgba(255, 193, 7, 0.15);
+            color: var(--yellow);
+        }
+
+        .badge-resolved {
+            background: rgba(76, 175, 80, 0.15);
+            color: var(--green);
+        }
+
+        .badge-rejected {
+            background: rgba(244, 67, 54, 0.15);
+            color: #f44336;
+        }
+
+        /* Progress bar updated styles */
+        .progress-bar {
+            display: flex;
+            gap: 4px;
+            margin: 24px 0;
+        }
+
+        .progress-step {
+            flex: 1;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        /* Step-specific active colors */
+        .progress-step.step-received.active {
+            background: var(--blue);
+        }
+
+        .progress-step.step-investigating.active {
+            background: var(--yellow);
+        }
+
+        .progress-step.step-resolved.active {
+            background: var(--green);
+        }
+
+        .progress-step.current {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 24px;
+        }
+
+        .timeline {
+            border-left: 2px solid var(--border);
+            padding-left: 20px;
+            margin: 20px 0;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -25px;
+            top: 4px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--primary);
+        }
+
+        .timeline-item .time {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .timeline-item .note {
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .feedback-box {
+            background: rgba(76, 175, 80, 0.08);
+            border: 1px solid rgba(76, 175, 80, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+
+        .stars {
+            color: var(--yellow);
+            font-size: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="topbar">
+        <h1> <span>Track</span> Report</h1>
+        <div>
+            <a href="../index.html">← Login</a> &nbsp;|&nbsp; <a href="community_map.html"> Map</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="search-box">
+            <h2>Track Your Report</h2>
+            <p>Enter your unique Complaint ID to check the current status</p>
+            <div class="search-input">
+                <input type="text" id="trackInput" placeholder="CHR-XXXXXX" maxlength="10">
+                <button onclick="trackReport()">Track</button>
+            </div>
+        </div>
+        <div id="resultBox" class="hidden"></div>
+    </div>
+
+    <script>
+        async function trackReport() {
+            const id = document.getElementById('trackInput').value.trim().toUpperCase();
+            if (!id) { alert('Please enter a Report ID'); return; }
+
+            try {
+                const r = await fetch(`../api/reports/track.php?id=${id}`);
+                const d = await r.json();
+                const box = document.getElementById('resultBox');
+
+                if (!d.success) {
+                    box.className = 'result';
+                    box.innerHTML = `<div style="text-align:center;padding:20px;"><h3 style="color:#f44336;"> Report Not Found</h3><p style="color:var(--muted);margin-top:8px;">Please check the ID and try again.</p></div>`;
+                    return;
+                }
+
+                const rpt = d.report;
+                const steps = ['Received', 'Investigating', 'Resolved'];
+                const currentIdx = steps.indexOf(rpt.status);
+
+                let progressHTML = '<div class="progress-bar">';
+                steps.forEach((s, i) => {
+                    // Check if this step should be colored in
+                    let isActive = i <= currentIdx ? 'active' : '';
+                    let isCurrent = i === currentIdx ? 'current' : '';
+                    let stepClass = `step-${s.toLowerCase()}`; // yields step-received, step-investigating, or step-resolved
+
+                    progressHTML += `<div class="progress-step ${stepClass} ${isActive} ${isCurrent}"></div>`;
+                });
+                progressHTML += '</div><div class="progress-labels"><span>Received</span><span>Investigating</span><span>Resolved</span></div>';
+
+                if (rpt.status === 'Rejected') {
+                    progressHTML = '<div style="text-align:center;padding:10px;margin:16px 0;background:rgba(244,67,54,0.1);border-radius:10px;color:#f44336;">This report has been rejected.</div>';
+                }
+
+                let timelineHTML = '';
+                if (d.updates && d.updates.length > 0) {
+                    timelineHTML = '<h4 style="margin-top:24px;margin-bottom:8px;"> Updates</h4><div class="timeline">';
+                    d.updates.forEach(u => {
+                        timelineHTML += `<div class="timeline-item">
+                    <div class="time">${new Date(u.created_at).toLocaleString()} · ${u.author_role}</div>
+                    <div class="note">${u.notes || ''}</div>
+                </div>`;
+                    });
+                    timelineHTML += '</div>';
+                }
+
+                let feedbackHTML = '';
+                if (d.feedback) {
+                    feedbackHTML = `<div class="feedback-box">
+                <strong> Your Rating:</strong> <span class="stars">${'★'.repeat(d.feedback.score)}${'☆'.repeat(5 - d.feedback.score)}</span>
+                ${d.feedback.comment ? `<p style="margin-top:8px;color:var(--muted);font-size:14px;">"${d.feedback.comment}"</p>` : ''}
+            </div>`;
+                }
+
+                box.className = 'result';
+                box.innerHTML = `
+            <h3>${rpt.report_subject}</h3>
+            <div class="info-row"><span class="label">Report ID</span><span style="color:var(--primary);font-weight:600;">${rpt.report_id}</span></div>
+            <div class="info-row"><span class="label">Status</span><span class="badge badge-${rpt.status.toLowerCase()}">${rpt.status}</span></div>
+            <div class="info-row"><span class="label">Category</span><span>${rpt.hazard_category || 'N/A'}</span></div>
+            <div class="info-row"><span class="label">District</span><span>${rpt.district || 'N/A'}</span></div>
+            <div class="info-row"><span class="label">Assigned Officer</span><span>${rpt.officer_name || 'Pending assignment'}</span></div>
+            <div class="info-row"><span class="label">Submitted</span><span>${new Date(rpt.created_at).toLocaleDateString()}</span></div>
+            <div class="info-row"><span class="label">Last Updated</span><span>${new Date(rpt.updated_at).toLocaleDateString()}</span></div>
+            ${progressHTML}${timelineHTML}${feedbackHTML}`;
+            } catch (e) {
+                document.getElementById('resultBox').className = 'result';
+                document.getElementById('resultBox').innerHTML = '<p style="color:#f44336;text-align:center;">Connection error. Please try again.</p>';
+            }
+        }
+
+        document.getElementById('trackInput').addEventListener('keypress', e => { if (e.key === 'Enter') trackReport(); });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Officer Dashboard - Community Hazard Report</title>
+    <link rel="icon" type="image/png" href="../assets/images/LOGO.png?v=4">
+    <link rel="shortcut icon" type="image/png" href="../assets/images/LOGO.png?v=4">
+    <link rel="apple-touch-icon" href="../assets/images/LOGO.png?v=4">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #FF6B6B;
+            --primary-hover: #FF5252;
+            --bg: #f8f9fa;
+            --surface: #ffffff;
+            --surface2: #f1f3f5;
+            --text: #212529;
+            --muted: #6c757d;
+            --border: rgba(0, 0, 0, 0.1);
+            --green: #4CAF50;
+            --yellow: #FFC107;
+            --blue: #2196F3;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 32px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .topbar h1 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .topbar h1 span {
+            color: var(--primary);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            background: var(--surface2);
+            color: var(--muted);
+            border: 1px solid var(--border);
+            transition: all .2s;
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        /* OVERVIEW (ADMIN STYLE) */
+        .overview {
+            background: url('../assets/images/dashboard.jpg') center/cover;
+            position: relative;
+            padding: 60px 20px 140px;
+            text-align: center;
+            color: white;
+            border-radius: 16px;
+            margin-bottom: 120px;
+        }
+
+        .overview-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 16px;
+        }
+
+        .overview-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .map-overlap {
+            position: absolute;
+            bottom: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 85%;
+            height: 200px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            z-index: 10;
+            border: 4px solid white;
+            cursor: pointer;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px;
+            text-align: center;
+        }
+
+        .stat-card .num {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 280px;
+            margin-bottom: 16px;
+        }
+
+        /* MANAGE REPORTS (WIREFRAME STYLE) */
+        .report-card {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .report-meta {
+            width: 160px;
+            flex-shrink: 0;
+        }
+
+        .report-meta div {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+
+        .report-content {
+            flex: 1;
+        }
+
+        .report-image {
+            width: 100%;
+            border-radius: 12px;
+            object-fit: cover;
+            max-height: 300px;
+            background: #eee;
+            margin-top: 16px;
+        }
+
+        .btn-black {
+            background: #000;
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .resolved-item {
+            display: flex;
+            background: #F0F9F4;
+            padding: 16px 24px;
+            border-radius: 12px;
+            gap: 40px;
+            margin-bottom: 12px;
+        }
+
+        .resolved-item.alt {
+            background: #F3F4F6;
+        }
+
+        /* LOGBOOK DETAIL */
+        .timeline-item {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .timeline-time {
+            width: 80px;
+            flex-shrink: 0;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-img {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 12px;
+            margin-top: 12px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 20px;
+            padding: 32px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* LOCALLY SCOPED CITIZEN STYLE FOR ALERTS TAB */
+        .alert-form-container .card {
+            background: #fff;
+            padding: 32px;
+            border-radius: 20px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+            margin-bottom: 24px;
+        }
+
+        .alert-form-container .form-group {
+            margin-bottom: 24px;
+        }
+
+        .alert-form-container .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            color: #212529;
+            margin-bottom: 8px;
+        }
+
+        .alert-form-container input,
+        .alert-form-container select,
+        .alert-form-container textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: 0.2s;
+            background: #fff;
+        }
+
+        .alert-form-container input:focus,
+        .alert-form-container select:focus,
+        .alert-form-container textarea:focus {
+            border-color: #FF6B6B;
+            box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.1);
+        }
+
+        .alert-form-container .btn-publish {
+            background: #FF6B6B;
+            color: #fff;
+            padding: 18px 80px;
+            border-radius: 16px;
+            font-size: 16px;
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        /* Footer Styles */
+        .footer {
+            background: #fff;
+            padding: 80px 0 60px;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            margin-top: 80px;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 60px;
+            padding: 0 32px;
+        }
+
+        .footer-links-grid {
+            display: flex;
+            gap: 80px;
+        }
+
+        .footer-group h4 {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #212529;
+        }
+
+        .footer-group a {
+            display: block;
+            color: #6c757d;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 14px;
+            transition: all 0.2s;
+        }
+
+        .footer-group a:hover {
+            color: #FF6B6B;
+            transform: translateX(4px);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 60px auto 0;
+            padding: 32px 32px 0;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            text-align: center;
+            color: #6c757d;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="topbar">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <img src="../assets/images/LOGO.png" alt="CHEHRS Logo"
+                style="width:40px; height:40px; object-fit:contain; border-radius:8px;">
+            <h1><span>Officer</span> Control Panel</h1>
+        </div>
+        <div style="display:flex; gap:20px; align-items:center;">
+            <span id="officerName" style="color:var(--muted); font-size:14px; font-weight:600;">Officer</span>
+            <button class="btn-outline" onclick="logout()">Log Out</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('overview',this)"> Overview</div>
+            <div class="tab" onclick="showTab('manage',this)"> My Cases</div>
+            <div class="tab" onclick="showTab('map',this)"> District Map</div>
+            <div class="tab" onclick="showTab('analytics',this)"> Analytics</div>
+            <div class="tab" onclick="showTab('alerts',this)"> Create Alert</div>
+        </div>
+
+        <!-- OVERVIEW TAB (ADMIN STYLE) -->
+        <div id="tab-overview">
+            <div class="overview">
+                <div class="overview-overlay"></div>
+                <div class="overview-content">
+                    <h1 id="overviewTitle" style="font-size: 36px; margin-bottom: 8px;">District Command</h1>
+                    <p id="overviewSubtitle" style="font-size: 16px; margin-bottom: 8px; opacity: 0.9;">Malaysia HQ</p>
+                    <p style="font-size: 16px; margin-bottom: 24px; color: #ffffff; opacity: 0.9;"><span id="activeCasesCount">0</span> active reports</p>
+                    <button class="btn-black" style="background:#fff; color:#000; border-radius:20px;"
+                        onclick="showTab('manage', document.querySelectorAll('.tab')[1])">View cases</button>
+                </div>
+                <div class="map-overlap" onclick="openMapModal()">
+                    <div id="overviewMap" style="width: 100%; height: 100%; pointer-events: none;"></div>
+                    <div style="position: absolute; inset:0; background:rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .2s;"
+                        onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">
+                        <span
+                            style="background:var(--primary); color:#fff; padding:8px 16px; border-radius:20px; font-weight:600; font-size:14px;">Open
+                            Full Map </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-grid" id="overviewStats"></div>
+
+            <div style="display:flex; gap:24px; flex-wrap:wrap; margin-bottom:40px;">
+                <div class="card" style="flex:1; min-width:300px;">
+                    <h3>District Case Status</h3>
+                    <div class="chart-container">
+                        <canvas id="overviewChart"></canvas>
+                        <div
+                            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none;">
+                            <div style="font-size: 12px; color: var(--muted);">Total Reports</div>
+                            <div style="font-size: 32px; font-weight: bold; color: var(--text);" id="totalReportsCount">
+                                0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="flex:1; min-width:300px;">
+                    <h3>Awareness Alerts</h3>
+                    <div id="alertsPreview" style="display:flex; flex-direction:column; gap:12px;">
+                        <!-- Populate alerts -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MY CASES TAB (WIREFRAME STYLE) -->
+        <div id="tab-manage" class="hidden">
+            <div id="manageDashboard">
+                <h1 style="font-size:32px; margin-bottom:8px;">Reports to Manage</h1>
+                <p style="font-weight:700; font-size:18px; margin-bottom:40px;">Area set to <span
+                        id="districtNameDisplay">...</span></p>
+
+                <div style="display:flex; gap:12px; margin-bottom:40px;">
+                    <input type="text" id="searchInput" placeholder="Search for a report..."
+                        style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:var(--surface2);">
+                    <select id="filterCategory"
+                        style="padding:12px; border-radius:8px; border:1px solid var(--border); background:#fff; min-width:180px;">
+                        <option value="">All Categories</option>
+                        <option value="Air Pollution">Air Pollution</option>
+                        <option value="Water Contamination">Water Contamination</option>
+                        <option value="Illegal Dumping">Illegal Dumping</option>
+                        <option value="Noise Pollution">Noise Pollution</option>
+                        <option value="Chemical Spill">Chemical Spill</option>
+                        <option value="Structural Hazard">Structural Hazard</option>
+                        <option value="Flooding">Flooding</option>
+                        <option value="Fire Hazard">Fire Hazard</option>
+                        <option value="Road Hazard">Road Hazard</option>
+                        <option value="Biological Hazard">Biological Hazard</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <button class="btn-black" style="background: var(--primary);"
+                        onclick="renderManageList()">Search</button>
+                </div>
+
+                <h3 style="margin-bottom:24px;">Latest Reports</h3>
+                <div id="latestReports"></div>
+
+                <h3 style="margin-top:60px; margin-bottom:24px;">Resolved Reports</h3>
+                <div id="resolvedReports"></div>
+            </div>
+
+            <div id="manageDetail" class="hidden">
+                <button class="btn-outline" onclick="hideDetail()" style="margin-bottom:24px;">← Back to
+                    Dashboard</button>
+                <div id="detailContent"></div>
+            </div>
+        </div>
+
+        <!-- MAP TAB -->
+        <div id="tab-map" class="hidden">
+            <div class="card" style="height:600px; padding:0; overflow:hidden;">
+                <iframe id="fullMapFrame" src="" style="width:100%; height:100%; border:none;"></iframe>
+            </div>
+        </div>
+
+        <!-- ANALYTICS TAB (ADMIN STYLE) -->
+        <div id="tab-analytics" class="hidden">
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap:20px;">
+                <div class="card">
+                    <h3>Reports by Category</h3>
+                    <div class="chart-container"><canvas id="chartCategory"></canvas></div>
+                </div>
+                <div class="card">
+                    <h3>Reports by Status</h3>
+                    <div class="chart-container"><canvas id="chartStatus"></canvas></div>
+                </div>
+                <div class="card">
+                    <h3>Monthly Trend</h3>
+                    <div class="chart-container"><canvas id="chartMonthly"></canvas></div>
+                </div>
+                <div class="card">
+                    <h3>Case Resolution Rate</h3>
+                    <div class="chart-container"><canvas id="chartResolution"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ALERTS TAB (CITIZEN STYLE - LOCALLY SCOPED) -->
+        <div id="tab-alerts" class="hidden alert-form-container">
+            <div style="margin-bottom: 40px;">
+                <h1 style="font-size: 32px; font-weight: 800; margin-bottom: 8px;">Awareness Alert</h1>
+                <p style="color:var(--muted); font-size:15px;">Broadcast critical safety information to all civilians in
+                    your district.</p>
+            </div>
+
+            <form id="alertForm" onsubmit="event.preventDefault(); submitAlert('alertForm');">
+                <!-- TOP MEDIA CARDS -->
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px;">
+                    <div style="cursor: pointer;" onclick="document.getElementById('alertPhotoInput').click()">
+                        <div
+                            style="width:100%; aspect-ratio: 16/9; background:#fff; border-radius:16px; overflow:hidden; position:relative; border:2px dashed #e9ecef; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                            <img id="alertPhotoPreview" src="../assets/images/Environmental.jpg"
+                                style="width:100%; height:100%; object-fit:cover;">
+                            <div style="position:absolute; inset:0; background:rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .2s;"
+                                onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">
+                                <span
+                                    style="background:#fff; color:#000; padding:10px 20px; border-radius:30px; font-weight:700; font-size:13px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+                                    Change Evidence Image</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+                            <span style="font-weight:700; font-size:14px; color:#212529;">Take an image of the
+                                hazard</span>
+                            <span style="opacity:0.5;"></span>
+                        </div>
+                        <input type="file" id="alertPhotoInput" name="photo" accept="image/*" class="hidden"
+                            onchange="previewAlertPhoto(this)">
+                    </div>
+
+                    <div>
+                        <div id="alertMap"
+                            style="width:100%; aspect-ratio: 16/9; background:#fff; border-radius:16px; border:1px solid #e9ecef; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+                            <span style="font-weight:700; font-size:14px; color:#212529;">Pin the hazard location</span>
+                            <span style="opacity:0.5;"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LOCATION SECTION -->
+                <div style="margin-bottom: 40px;">
+                    <h2 style="font-size:20px; font-weight:700; margin-bottom:8px;">Location of hazard</h2>
+                    <p style="font-size:13px; color:var(--muted); margin-bottom:20px;">Describe the areas directly
+                        affected and where the hazard could spread.</p>
+
+                    <div class="card">
+                        <div class="form-group">
+                            <label>Longitude and Latitude (Auto-pinned)</label>
+                            <input type="text" id="alertCoords" name="coords_display" readonly
+                                style="background:#f8f9fa;" placeholder="Click the map above to pin coordinates...">
+                            <input type="hidden" name="latitude" id="alertLat">
+                            <input type="hidden" name="longitude" id="alertLng">
+                            <input type="hidden" name="report_id" id="alertReportId">
+                            <input type="hidden" name="existing_photo" id="alertExistingPhoto">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Affected Region (radius in metres)</label>
+                            <input type="number" name="affected_radius" placeholder="e.g. 500" required min="0">
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                            <div class="form-group">
+                                <label>State</label>
+                                <select name="state" id="alertState" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label>District</label>
+                                <select name="district" id="alertDistrict" required></select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Area Type</label>
+                            <select name="area_type">
+                                <option value="Public Area, Forest">Public Area, Forest</option>
+                                <option value="Residential Area">Residential Area</option>
+                                <option value="Industrial Zone">Industrial Zone</option>
+                                <option value="Commercial Center">Commercial Center</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Location Details</label>
+                            <textarea name="location_details" rows="3"
+                                placeholder="e.g. Near the main entrance of Taman Negara..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ADDITIONAL DETAILS SECTION -->
+                <div style="margin-bottom: 60px;">
+                    <h2 style="font-size:20px; font-weight:700; margin-bottom:8px;">Additional Details</h2>
+                    <p style="font-size:13px; color:var(--muted); margin-bottom:20px;">Provide crucial safety
+                        instructions to citizens in a clear manner.</p>
+
+                    <div class="card">
+                        <div class="form-group">
+                            <label>Alert Subject</label>
+                            <input type="text" name="subject" placeholder="e.g. Severe Smoke Haze Warning" required>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                            <div class="form-group">
+                                <label>Cause of Alert</label>
+                                <input type="text" name="hazard_cause" placeholder="e.g. Open burning, pipe burst...">
+                            </div>
+                            <div class="form-group">
+                                <label>Alert Category</label>
+                                <select name="category" required>
+                                    <option value="">Select category</option>
+                                    <option>Air Pollution</option>
+                                    <option>Water Contamination</option>
+                                    <option>Illegal Dumping</option>
+                                    <option>Noise Pollution</option>
+                                    <option>Chemical Spill</option>
+                                    <option>Structural Hazard</option>
+                                    <option>Flooding</option>
+                                    <option>Fire Hazard</option>
+                                    <option>Road Hazard</option>
+                                    <option>Biological Hazard</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Advice to the Public</label>
+                            <textarea name="advice" rows="4" required
+                                placeholder="What should people do? e.g. Stay indoors, wear masks..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align:center;">
+                    <button type="submit" class="btn-publish">Publish Awareness Alert</button>
+                </div>
+            </form>
+        </div>
+
+
+
+    </div>
+
+    <!-- MAP MODAL -->
+    <div id="mapModal" class="modal-overlay hidden">
+        <div class="modal" style="padding:0; overflow:hidden; position:relative;">
+            <button onclick="closeMapModal()"
+                style="position:absolute; top:16px; right:16px; z-index:10; background:#fff; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer; font-weight:700;">✕</button>
+            <iframe id="modalMapFrame" src="" style="width:100%; height:80vh; border:none;">✕</iframe>
+        </div>
+    </div>
+
+    <!-- ALERT DETAIL MODAL -->
+    <div id="alertDetailModal" class="modal-overlay hidden">
+        <div class="modal" style="max-width:600px;">
+            <div id="alertDetailContent"></div>
+            <div style="text-align:right; margin-top:24px; padding-top:16px; border-top:1px solid var(--border);">
+                <button class="btn-outline" onclick="closeAlertDetailModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ALERT MODAL FROM CASE (LEGACY REMOVED - NOW REDIRECTS TO TAB) -->
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+                    <img src="../assets/images/LOGO.png" alt="CHEHRS Logo"
+                        style="width:44px; height:44px; object-fit:contain; border-radius:10px;">
+                    <span style="font-weight:700; font-size:20px; color:#212529; letter-spacing:-0.5px;">Community <span
+                            style="color:#FF6B6B;">Hazard</span> Report</span>
+                </div>
+                <p style="color:#6c757d; font-size:14px; line-height:1.7; max-width:320px; margin-bottom:0;">
+                    Empowering civilians to build safer environments through real-time hazard tracking and
+                    community-driven reporting.
+                </p>
+            </div>
+
+            <div class="footer-links-grid">
+                <div class="footer-group">
+                    <h4>Platform</h4>
+                    <a href="../index.html">Login Portal</a>
+                    <a href="../civilian/track_report.html">Track Status</a>
+                    <a href="../civilian/community_map.html">Hazard Map</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Community Hazard Reporting System. Engineered for safety.</p>
+        </div>
+    </footer>
+
+    <script>
+        let allCases = [];
+        let officerId = 0;
+        let officerDistrict = '';
+        let charts = {};
+        let currentReportForAlert = null;
+
+        async function init() {
+            try {
+                const r = await fetch('../api/auth/profile.php');
+                const d = await r.json();
+                if (!d.logged_in || d.user.role !== 'officer') { window.location.href = '../index.html'; return; }
+                officerId = d.user.id;
+                officerDistrict = d.user.district;
+                document.getElementById('officerName').textContent = d.user.name;
+                document.getElementById('overviewSubtitle').textContent = officerDistrict + " Headquarters";
+                document.getElementById('districtNameDisplay').textContent = officerDistrict;
+                loadDashboard();
+            } catch (e) { console.error('Init failed'); }
+        }
+
+        async function loadDashboard() {
+            try {
+                const r = await fetch('../api/officer/my_cases.php');
+                const d = await r.json();
+                if (d.success) {
+                    allCases = d.cases;
+                    renderStats(d.status_counts);
+                    renderManageList();
+                    renderAnalytics(d.status_counts);
+                    initOverviewMap();
+                    loadAlerts(); // Add this line
+                }
+            } catch (e) { console.error('Data load failed'); }
+        }
+
+        let currentAlerts = [];
+        async function loadAlerts() {
+            try {
+                const r = await fetch(`../api/map/pins.php?district=${encodeURIComponent(officerDistrict)}&officer_id=${officerId}`);
+                const d = await r.json();
+                if (d.success) {
+                    currentAlerts = d.alerts || [];
+                    const alertsCont = document.getElementById('alertsPreview');
+                    if (currentAlerts.length > 0) {
+                        const icons = { 'Fire Hazard': '', 'Noise Pollution': '', 'Water Pollution': '', 'Chemical Waste': '', 'Air Pollution': '' };
+                        alertsCont.innerHTML = currentAlerts.map(a => {
+                            const icon = icons[a.hazard_category] || '';
+                            return `
+                                <div style="padding:12px; border-radius:12px; background:var(--surface2); border:1px solid var(--border); display:flex; gap:12px; align-items:center;">
+                                    <span style="font-size:24px;">${icon}</span>
+                                    <div style="flex:1;">
+                                        <div style="font-weight:700; font-size:13px;">${a.alert_subject}</div>
+                                        <div style="font-size:11px; color:var(--muted);">${a.district}, ${a.state}</div>
+                                    </div>
+                                    <div style="display:flex; gap:6px;">
+                                        <button class="btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openAlertDetail(${a.alert_id})">Details</button>
+                                        <button class="btn-outline" style="padding:4px 8px; font-size:11px; color:var(--danger);" onclick="deleteAlert(${a.alert_id})">Delete</button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    } else {
+                        alertsCont.innerHTML = '<p style="color:var(--muted); font-size:13px; text-align:center; padding:20px;">No active alerts in this district.</p>';
+                    }
+                }
+            } catch (e) { console.error('Alerts load failed'); }
+        }
+
+        function openAlertDetail(id) {
+            const a = currentAlerts.find(alert => alert.alert_id == id);
+            if (!a) return;
+
+            const detailCont = document.getElementById('alertDetailContent');
+            detailCont.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:20px;">
+                    <div>
+                        <h2 style="font-size:24px; color:var(--primary);">${a.alert_subject}</h2>
+                        <div style="font-size:13px; color:var(--muted); margin-top:4px;">Posted on ${new Date(a.created_at).toLocaleString()}</div>
+                    </div>
+                </div>
+                
+                ${a.photo_file ? `<img src="../uploads/alerts/${a.photo_file}" style="width:100%; border-radius:12px; margin-bottom:20px; max-height:300px; object-fit:cover;">` : ''}
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:24px;">
+                    <div>
+                        <div style="font-weight:700; font-size:12px; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">Hazard Category</div>
+                        <div style="font-size:14px;">${a.hazard_category}</div>
+                    </div>
+                    <div>
+                        <div style="font-weight:700; font-size:12px; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">Cause</div>
+                        <div style="font-size:14px;">${a.hazard_cause || 'Unknown'}</div>
+                    </div>
+                    <div>
+                        <div style="font-weight:700; font-size:12px; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">Location</div>
+                        <div style="font-size:14px;">${a.district}, ${a.state}</div>
+                    </div>
+                    <div>
+                        <div style="font-weight:700; font-size:12px; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">Area Type</div>
+                        <div style="font-size:14px;">${a.area_type || 'N/A'}</div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom:20px;">
+                    <div style="font-weight:700; font-size:12px; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">Location Details</div>
+                    <div style="font-size:14px; line-height:1.6;">${a.location_details || 'No specific details provided.'}</div>
+                </div>
+                
+                <div style="background:rgba(255,107,107,0.05); padding:16px; border-radius:12px; border:1px solid rgba(255,107,107,0.1);">
+                    <div style="font-weight:700; font-size:12px; text-transform:uppercase; color:var(--primary); margin-bottom:4px;">Advice to the Public</div>
+                    <div style="font-size:14px; line-height:1.6; font-weight:500;">${a.advice_text}</div>
+                </div>
+            `;
+
+            document.getElementById('alertDetailModal').classList.remove('hidden');
+        }
+
+        function closeAlertDetailModal() {
+            document.getElementById('alertDetailModal').classList.add('hidden');
+        }
+
+        async function deleteAlert(id) {
+            if (!confirm('Are you sure you want to delete this awareness alert? It will be removed from all civilian dashboards.')) return;
+
+            try {
+                const r = await fetch('../api/officer/delete_alert.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ alert_id: id })
+                });
+                const d = await r.json();
+                if (d.success) {
+                    loadAlerts();
+                } else {
+                    alert('Error: ' + d.message);
+                }
+            } catch (e) {
+                alert('Connection error. Failed to delete alert.');
+            }
+        }
+
+
+        function showTab(tab, el) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            if (el) el.classList.add('active');
+            ['overview', 'manage', 'map', 'analytics', 'alerts'].forEach(v => {
+                const element = document.getElementById('tab-' + v) || document.getElementById(v);
+                if (element) element.classList.add('hidden');
+            });
+
+            const target = document.getElementById('tab-' + tab) || document.getElementById(tab);
+            if (target) target.classList.remove('hidden');
+
+            if (tab === 'map') document.getElementById('fullMapFrame').src = `../civilian/community_map.html?embed=true&district=${encodeURIComponent(officerDistrict)}`;
+            if (tab === 'alerts') initAlertMap();
+        }
+
+        let alertMap, alertMarker;
+        let referenceMarkers = [];
+
+        function initAlertMap() {
+            if (alertMap) return;
+            setTimeout(() => {
+                alertMap = L.map('alertMap').setView([3.139, 101.6869], 11);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(alertMap);
+
+                // Add reference markers for all existing cases
+                allCases.forEach(c => {
+                    if (c.latitude && c.longitude) {
+                        const m = L.circleMarker([c.latitude, c.longitude], {
+                            radius: 8,
+                            fillColor: "#2196F3",
+                            color: "#fff",
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        }).addTo(alertMap);
+
+                        m.bindTooltip(`Report #${c.report_id}: ${c.report_subject}`, { direction: 'top' });
+
+                        m.on('click', (e) => {
+                            L.DomEvent.stopPropagation(e); // Prevent map click from triggering
+                            setAlertLocation(e.latlng.lat, e.latlng.lng);
+
+                            // Also pre-fill category if matching
+                            if (c.hazard_category) {
+                                const catSelect = document.querySelector('#alertForm [name="category"]');
+                                if (catSelect) catSelect.value = c.hazard_category;
+                            }
+                            // Pre-fill subject as well
+                            const subjInput = document.querySelector('#alertForm [name="subject"]');
+                            if (subjInput) subjInput.value = `Alert: ${c.report_subject}`;
+                        });
+                        referenceMarkers.push(m);
+                    }
+                });
+
+                alertMap.on('click', (e) => {
+                    setAlertLocation(e.latlng.lat, e.latlng.lng);
+                });
+            }, 200);
+        }
+
+        function setAlertLocation(lat, lng) {
+            if (alertMarker) alertMap.removeLayer(alertMarker);
+            alertMarker = L.marker([lat, lng]).addTo(alertMap);
+            document.getElementById('alertLat').value = lat;
+            document.getElementById('alertLng').value = lng;
+            document.getElementById('alertCoords').value = `${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}`;
+        }
+
+        function previewAlertPhoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => document.getElementById('alertPhotoPreview').src = e.target.result;
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+
+        function renderStats(counts) {
+            const total = allCases.length;
+            document.getElementById('totalReportsCount').textContent = total;
+            
+            const activeCases = total - (counts.Resolved || 0);
+            const activeCasesEl = document.getElementById('activeCasesCount');
+            if (activeCasesEl) activeCasesEl.textContent = activeCases;
+
+            const stats = [
+                { label: 'Assigned', val: total },
+
+                { label: 'In Progress', val: counts.Investigating || 0, color: '#FFC107' },
+                { label: 'Resolved', val: counts.Resolved || 0, color: '#4CAF50' },
+                { label: 'Rejected', val: counts.Rejected || 0, color: '#f44336' }
+            ];
+            document.getElementById('overviewStats').innerHTML = stats.map(s => `
+                <div class="stat-card"><div class="num" style="color:${s.color || '#FF6B6B'}">${s.val}</div><div class="label">${s.label}</div></div>
+            `).join('');
+
+            const ctx = document.getElementById('overviewChart').getContext('2d');
+            if (charts.overview) charts.overview.destroy();
+            charts.overview = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Received', 'Investigating', 'Resolved', 'Rejected'],
+                    datasets: [{ data: [counts.Received || 0, counts.Investigating || 0, counts.Resolved || 0, counts.Rejected || 0], backgroundColor: ['#2196F3', '#FFC107', '#4CAF50', '#f44336'], borderWidth: 0, cutout: '70%' }]
+                },
+                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        function renderManageList() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('filterCategory').value;
+            const filtered = allCases.filter(c => {
+                return (c.report_subject.toLowerCase().includes(search) || c.report_id.toLowerCase().includes(search)) && (!category || c.hazard_category === category);
+            });
+
+            const latest = filtered.filter(c => c.status !== 'Resolved');
+            const resolved = filtered.filter(c => c.status === 'Resolved');
+
+            document.getElementById('latestReports').innerHTML = latest.map(c => `
+                <div class="report-card">
+                    <div class="report-meta">
+                        <div>${c.hazard_category}</div>
+                        <div>#${c.report_id}</div>
+                        <div style="margin-bottom:20px;">${c.citizen_name || 'Anonymous'}</div>
+                        <button class="btn-black" style="background: var(--primary);" onclick="openDetail('${c.report_id}')">Manage</button>
+                    </div>
+                    <div class="report-content">
+                        <h2 style="font-size:18px; font-weight:700;">${c.report_subject}</h2>
+                        <p style="font-size:13px; color:#666; margin-top:8px;">${c.description_text}</p>
+                        ${c.photo_file ? `<img src="../uploads/reports/${c.photo_file}" class="report-image">` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('resolvedReports').innerHTML = resolved.map((c, i) => `
+                <div class="resolved-item ${i % 2 === 1 ? 'alt' : ''}">
+                    <div class="resolved-time">
+                        <div style="font-weight:700;">${new Date(c.created_at).toLocaleDateString()}</div>
+                        <div style="font-size:12px; color:#666;">${c.district}</div>
+                    </div>
+                    <div class="resolved-content">
+                        <div style="font-weight:700;">${c.report_subject}</div>
+                        <div style="font-size:12px; color:#666;">${c.description_text}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function openDetail(id) {
+            document.getElementById('manageDashboard').classList.add('hidden');
+            document.getElementById('manageDetail').classList.remove('hidden');
+            document.getElementById('detailContent').innerHTML = '<p>Loading details...</p>';
+            try {
+                const r = await fetch(`../api/reports/track.php?id=${id}`);
+                const d = await r.json();
+                if (d.success) {
+                    currentReportForAlert = d.report;
+                    renderDetail(d.report, d.updates);
+                }
+            } catch (e) { console.error('Track failed'); }
+        }
+
+        function hideDetail() { document.getElementById('manageDashboard').classList.remove('hidden'); document.getElementById('manageDetail').classList.add('hidden'); }
+
+        function renderDetail(r, updates) {
+            // Status badge colors
+            const statusColors = {
+                'Received': '#2196F3',
+                'Investigating': '#FFC107',
+                'Resolved': '#4CAF50',
+                'Rejected': '#f44336'
+            };
+            const statusColor = statusColors[r.status] || '#999';
+
+            document.getElementById('detailContent').innerHTML = `
+                <!-- HEADER -->
+                <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:24px; flex-wrap:wrap; gap:16px;">
+                    <div>
+                        <h1 style="font-size:28px; margin-bottom:4px;">${r.report_subject}</h1>
+                        <p style="color:#666; font-size:13px;">#${r.report_id} · ${new Date(r.created_at).toLocaleString()}</p>
+                    </div>
+                    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                        <span style="background:${statusColor}20; color:${statusColor}; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:700; border:1px solid ${statusColor}40;">
+                            ${r.status}
+                        </span>
+                        ${r.status !== 'Rejected' ? `<button class="btn-outline" onclick="openAlertModalFromCase()" style="border-radius:12px;">Broadcast Alert</button>` : ''}
+                    </div>
+                </div>
+
+                <!-- PHOTO -->
+                ${r.photo_file ? `<img src="../uploads/reports/${r.photo_file}" style="width:100%; border-radius:16px; margin-bottom:32px; max-height:400px; object-fit:cover;">` : ''}
+
+                <!-- REPORT INFO GRID -->
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; margin-bottom:32px;">
+                    <div style="background:var(--surface2); padding:20px; border-radius:12px;">
+                        <h4 style="margin-bottom:8px; font-size:13px; color:var(--muted); text-transform:uppercase;">Location</h4>
+                        <p style="font-size:14px; font-weight:600;">${r.district || 'N/A'}, ${r.state || 'N/A'}</p>
+                        ${r.location_details ? `<p style="font-size:12px; color:#666; margin-top:4px;">${r.location_details}</p>` : ''}
+                    </div>
+                    <div style="background:var(--surface2); padding:20px; border-radius:12px;">
+                        <h4 style="margin-bottom:8px; font-size:13px; color:var(--muted); text-transform:uppercase;">Case Details</h4>
+                        <p style="font-size:14px;">Category: <strong>${r.hazard_category || 'N/A'}</strong></p>
+                        <p style="font-size:14px;">Priority: <strong>${r.priority || 'Medium'}</strong></p>
+                    </div>
+                    <div style="background:var(--surface2); padding:20px; border-radius:12px;">
+                        <h4 style="margin-bottom:8px; font-size:13px; color:var(--muted); text-transform:uppercase;">Reported By</h4>
+                        <p style="font-size:14px; font-weight:600;">${r.citizen_name || 'Anonymous'}</p>
+                        ${r.citizen_email && !r.metadata_status.startsWith('Verified') ? `<a href="mailto:${r.citizen_email}?subject=Regarding Report %23${r.report_id}: ${encodeURIComponent(r.report_subject)}" style="font-size:12px; color:var(--primary); text-decoration:none; display:inline-block; margin-top:4px;"> ${r.citizen_email}</a>
+                        <p style="font-size:11px; color:var(--muted); margin-top:4px;">Shown because report is unverified</p>` : ''}
+                    </div>
+                </div>
+
+                ${r.description_text ? `
+                <div style="background:var(--surface2); padding:20px; border-radius:12px; margin-bottom:32px;">
+                    <h4 style="margin-bottom:8px; font-size:13px; color:var(--muted); text-transform:uppercase;">Civilian Description</h4>
+                    <p style="font-size:14px; line-height:1.6;">${r.description_text}</p>
+                </div>` : ''}
+
+                <!-- UNIFIED UPDATE BOX -->
+                ${r.status !== 'Resolved' ? `
+                <div style="background:var(--surface); border:2px solid var(--border); padding:24px; border-radius:16px; margin-bottom:32px;">
+                    <h3 style="margin-bottom:16px;">Update Case</h3>
+                    <textarea id="noteText" rows="3" placeholder="Write an investigation update, observation, or finding..."
+                        style="width:100%; padding:14px; border-radius:12px; border:1px solid var(--border); font-family:inherit; font-size:14px; resize:vertical; margin-bottom:16px; box-sizing:border-box;"></textarea>
+                    <div style="margin-bottom:16px;">
+                        <label style="font-size:13px; font-weight:700; display:block; margin-bottom:8px;">Upload Evidence (optional)</label>
+                        <input type="file" id="evidencePhoto" accept="image/*" style="font-size:13px;">
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <button class="btn-black" style="border-radius:12px; padding:10px 24px;"
+                            onclick="submitNote('${r.report_id}')">Submit Note</button>
+                        ${r.status === 'Received' ? `
+                        <button class="btn-black" style="background:#FFC107; color:#000; border-radius:12px; padding:10px 24px; font-size:13px;"
+                            onclick="updateCaseStatus('${r.report_id}', 'Investigating')">
+                            Start Investigation
+                        </button>` : ''}
+                        ${r.status === 'Investigating' ? `
+                        <button class="btn-black" style="background:#4CAF50; border-radius:12px; padding:10px 24px; font-size:13px;"
+                            onclick="submitResolve('${r.report_id}')">
+                            Resolve Case
+                        </button>` : ''}
+                    </div>
+                </div>` : `
+                <div style="background:#E8F5E9; border:2px solid #A5D6A7; padding:20px; border-radius:16px; margin-bottom:32px; text-align:center;">
+                    <span style="color:#2E7D32; font-size:15px; font-weight:700;"> Case Resolved</span>
+                </div>`}
+
+                <!-- TIMELINE / LOG NOTES -->
+                <div style="border-top:2px solid #eee; padding-top:32px;">
+                    <h2 style="margin-bottom:24px;">Investigation Log</h2>
+                    ${updates.length > 0 ? updates.map(u => `
+                        <div class="timeline-item">
+                            <div class="timeline-time">
+                                <div>${new Date(u.created_at).toLocaleDateString('en-GB')}</div>
+                                <div>${new Date(u.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                            </div>
+                            <div class="timeline-content" style="background:var(--surface2); padding:16px; border-radius:12px;">
+                                <h4 style="font-size:13px; color:var(--primary); text-transform:uppercase; margin-bottom:6px;">${u.author_role} Update</h4>
+                                <p style="font-size:13px; color:#444; line-height:1.5;">${u.notes}</p>
+                                ${u.photo_file ? `<img src="../uploads/reports/${u.photo_file}" class="timeline-img" style="margin-top:12px;">` : ''}
+                            </div>
+                        </div>`).join('') : '<p style="color:var(--muted); text-align:center; padding:20px;">No investigation notes yet. Start by adding your first update above.</p>'}
+                </div>`;
+        }
+
+        async function updateCaseStatus(reportId, newStatus) {
+            if (!confirm(`Are you sure you want to change the status to "${newStatus}"?`)) return;
+
+            const formData = new FormData();
+            formData.append('report_id', reportId);
+            formData.append('action', 'update_status');
+            formData.append('status', newStatus);
+            formData.append('notes', document.getElementById('noteText').value.trim());
+            const photoInput = document.getElementById('evidencePhoto');
+            if (photoInput && photoInput.files[0]) formData.append('evidence_photo', photoInput.files[0]);
+
+            try {
+                const res = await fetch('../api/officer/update_case.php', { method: 'POST', body: formData });
+                const d = await res.json();
+                alert(d.message);
+                if (d.success) { openDetail(reportId); loadDashboard(); }
+            } catch (e) { alert('Error updating status.'); }
+        }
+
+        async function submitNote(reportId) {
+            const notes = document.getElementById('noteText').value.trim();
+            const photoInput = document.getElementById('evidencePhoto');
+            const hasPhoto = photoInput && photoInput.files && photoInput.files[0];
+
+            if (!notes && !hasPhoto) {
+                alert('Please write a note or upload evidence.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('report_id', reportId);
+            formData.append('action', 'add_note');
+            formData.append('notes', notes);
+            if (hasPhoto) formData.append('evidence_photo', photoInput.files[0]);
+
+            try {
+                const res = await fetch('../api/officer/update_case.php', { method: 'POST', body: formData });
+                const d = await res.json();
+                alert(d.message);
+                if (d.success) openDetail(reportId);
+            } catch (e) { alert('Error submitting note.'); }
+        }
+
+        async function submitResolve(reportId) {
+            const notes = document.getElementById('noteText').value.trim();
+            const photoInput = document.getElementById('evidencePhoto');
+
+            if (!notes) {
+                alert('Please write a resolution note describing how the case was resolved.');
+                return;
+            }
+            if (!photoInput || !photoInput.files || photoInput.files.length === 0) {
+                alert('An evidence photo must be provided to resolve this case.');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to mark this case as RESOLVED?')) return;
+
+            const formData = new FormData();
+            formData.append('report_id', reportId);
+            formData.append('action', 'resolve');
+            formData.append('notes', notes);
+            if (photoInput && photoInput.files[0]) formData.append('evidence_photo', photoInput.files[0]);
+
+            try {
+                const res = await fetch('../api/officer/update_case.php', { method: 'POST', body: formData });
+                const d = await res.json();
+                alert(d.message);
+                if (d.success) { openDetail(reportId); loadDashboard(); }
+            } catch (e) { alert('Error resolving case.'); }
+        }
+
+        function renderAnalytics(counts) {
+            // 1. Reports by Category
+            const catCtx = document.getElementById('chartCategory').getContext('2d');
+            const catData = {}; allCases.forEach(c => catData[c.hazard_category] = (catData[c.hazard_category] || 0) + 1);
+            if (charts.category) charts.category.destroy();
+            charts.category = new Chart(catCtx, { type: 'bar', data: { labels: Object.keys(catData), datasets: [{ data: Object.values(catData), backgroundColor: '#FF6B6B', borderRadius: 8 }] }, options: { maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+
+            // 2. Reports by Status
+            const statusCtx = document.getElementById('chartStatus').getContext('2d');
+            if (charts.status) charts.status.destroy();
+            const statusColors = { 'Received': '#2196F3', 'Investigating': '#FFC107', 'Resolved': '#4CAF50', 'Rejected': '#f44336' };
+            charts.status = new Chart(statusCtx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(counts),
+                    datasets: [{
+                        data: Object.values(counts),
+                        backgroundColor: Object.keys(counts).map(s => statusColors[s] || '#999')
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            });
+
+            // 3. Monthly Trend
+            const monCtx = document.getElementById('chartMonthly').getContext('2d');
+            const monData = {}; allCases.forEach(c => { const m = new Date(c.created_at).toLocaleString('default', { month: 'short' }); monData[m] = (monData[m] || 0) + 1; });
+            if (charts.monthly) charts.monthly.destroy();
+            charts.monthly = new Chart(monCtx, { type: 'line', data: { labels: Object.keys(monData), datasets: [{ label: 'Cases Assigned', data: Object.values(monData), borderColor: '#2196F3', tension: 0.3, fill: true, backgroundColor: 'rgba(33, 150, 243, 0.1)' }] }, options: { maintainAspectRatio: false } });
+
+            // 4. Case Resolution Rate
+            const resCtx = document.getElementById('chartResolution').getContext('2d');
+            if (charts.resolution) charts.resolution.destroy();
+            charts.resolution = new Chart(resCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Resolved Cases', 'Active Cases', 'Rejected Cases'],
+                    datasets: [{
+                        data: [
+                            counts.Resolved || 0,
+                            (counts.Received || 0) + (counts.Investigating || 0),
+                            counts.Rejected || 0
+                        ],
+                        backgroundColor: ['#4CAF50', '#FFC107', '#f44336']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            });
+        }
+
+        function initOverviewMap() {
+            setTimeout(() => {
+                const map = L.map('overviewMap').setView([3.139, 101.6869], 10);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+                allCases.forEach(c => {
+                    if (c.latitude && c.longitude) L.circleMarker([c.latitude, c.longitude], { radius: 6, color: '#FF6B6B' }).addTo(map);
+                });
+            }, 500);
+        }
+
+        function openMapModal() {
+            document.getElementById('mapModal').classList.remove('hidden');
+            document.getElementById('modalMapFrame').src = `../civilian/community_map.html?embed=true&district=${encodeURIComponent(officerDistrict)}`;
+        }
+        function closeMapModal() { document.getElementById('mapModal').classList.add('hidden'); }
+
+        function openAlertModalFromCase() {
+            if (!currentReportForAlert) return;
+            const r = currentReportForAlert;
+
+            // Switch to alerts tab
+            showTab('alerts', document.querySelectorAll('.tab')[4]);
+
+            // Populate form fields
+            document.querySelector('#alertForm [name="subject"]').value = `Alert: ${r.report_subject}`;
+            document.querySelector('#alertForm [name="category"]').value = r.hazard_category || 'Air Pollution';
+            document.querySelector('#alertForm [name="location_details"]').value = r.location_details || '';
+            document.querySelector('#alertForm [name="advice"]').value = ''; // Leave blank for officer input
+
+            // Set Coordinates
+            if (r.latitude && r.longitude) {
+                if (alertMap) {
+                    alertMap.setView([r.latitude, r.longitude], 13);
+                    setAlertLocation(r.latitude, r.longitude);
+                } else {
+                    // Map might not be initialized yet, set values directly
+                    document.getElementById('alertLat').value = r.latitude;
+                    document.getElementById('alertLng').value = r.longitude;
+                    document.getElementById('alertCoords').value = `${parseFloat(r.latitude).toFixed(6)}, ${parseFloat(r.longitude).toFixed(6)}`;
+                }
+            }
+
+            // Set Report ID
+            document.getElementById('alertReportId').value = r.report_id;
+
+            // Set Image Preview
+            if (r.photo_file) {
+                document.getElementById('alertPhotoPreview').src = `../uploads/reports/${r.photo_file}`;
+                if (document.getElementById('alertExistingPhoto')) {
+                    document.getElementById('alertExistingPhoto').value = r.photo_file;
+                }
+            } else {
+                document.getElementById('alertPhotoPreview').src = '../assets/images/Environmental.jpg';
+                if (document.getElementById('alertExistingPhoto')) {
+                    document.getElementById('alertExistingPhoto').value = '';
+                }
+            }
+
+            // Set State & District (Requires a small delay for the dropdowns to exist/be ready if needed, but they are static mostly)
+            setTimeout(() => {
+                const stateSel = document.getElementById('alertState');
+                const distSel = document.getElementById('alertDistrict');
+
+                if (r.state) {
+                    stateSel.value = r.state;
+                    // Trigger district load manually
+                    distSel.innerHTML = '<option value="">Select District</option>';
+                    if (alertLocationData[r.state]) {
+                        alertLocationData[r.state].forEach(d => {
+                            const o = document.createElement('option');
+                            o.value = d; o.textContent = d;
+                            if (d === r.district) o.selected = true;
+                            distSel.appendChild(o);
+                        });
+                    }
+                }
+            }, 500);
+
+            // Scroll to top of tab
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+
+        function closeCaseAlertModal() {
+            document.getElementById('caseAlertModal').classList.add('hidden');
+        }
+
+        async function submitAlert(formId) {
+            const form = document.getElementById(formId);
+            const formData = new FormData(form);
+            if (!formData.has('district')) formData.append('district', officerDistrict);
+
+            try {
+                const res = await fetch('../api/officer/create_alert.php', { method: 'POST', body: formData });
+                const d = await res.json();
+                if (d.success) {
+                    alert('Awareness alert published successfully! It will now appear on civilian dashboards in this district.');
+                    form.reset();
+                    if (formId === 'caseAlertForm') closeCaseAlertModal();
+                } else {
+                    alert('Error: ' + d.message);
+                }
+            } catch (e) { alert('Error publishing alert'); }
+        }
+
+        // Load locations for alerts tab
+        let alertLocationData = {};
+        fetch('../api/locations.php').then(r => r.json()).then(data => {
+            alertLocationData = data;
+            const stateSel = document.getElementById('alertState');
+            stateSel.innerHTML = '<option value="">Select State</option>';
+            Object.keys(data).forEach(s => {
+                const o = document.createElement('option');
+                o.value = s; o.textContent = s;
+                stateSel.appendChild(o);
+            });
+        });
+
+        document.getElementById('alertState').addEventListener('change', function () {
+            const distSel = document.getElementById('alertDistrict');
+            distSel.innerHTML = '<option value="">Select District</option>';
+            if (this.value && alertLocationData[this.value]) {
+                alertLocationData[this.value].forEach(d => {
+                    const o = document.createElement('option');
+                    o.value = d; o.textContent = d;
+                    distSel.appendChild(o);
+                });
+            }
+        });
+
+        async function logout() { await fetch('../api/auth/logout.php', { method: 'POST' }); window.location.href = '../index.html'; }
+
+
+        init();
+    </script>
+</body>
+
+</html>

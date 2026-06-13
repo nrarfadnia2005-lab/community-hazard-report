@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community Hazard Report - Portal</title>
+    <link rel="icon" type="image/png" href="assets/images/LOGO.png?v=4">
+    <link rel="shortcut icon" type="image/png" href="assets/images/LOGO.png?v=4">
+    <link rel="apple-touch-icon" href="assets/images/LOGO.png?v=4">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #212529;
+            min-height: 100vh;
+            width: 100vw;
+            background-color: #f8f9fa;
+        }
+
+        .split-layout {
+            display: flex;
+            min-height: 100vh;
+            width: 100vw;
+        }
+
+        .image-section {
+            flex: 1;
+            /* Placeholder for the background image you provided */
+            background: url('assets/images/background.jpg') center/cover no-repeat;
+            position: relative;
+        }
+
+        /* Subtle overlay on image to ensure it looks good */
+        .image-section::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .form-section {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.05);
+            position: relative;
+            z-index: 10;
+        }
+
+        .form-container {
+            width: 100%;
+            max-width: 320px;
+        }
+
+        h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #000;
+        }
+
+        .subtitle {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 40px;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-group input[type="text"],
+        .input-group input[type="email"],
+        .input-group input[type="password"],
+        .input-group select {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #ced4da;
+            border-radius: 0;
+            padding: 8px 0;
+            color: #212529;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+            outline: none;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            border-bottom-color: #000;
+        }
+
+        .eye-icon {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #adb5bd;
+            cursor: pointer;
+        }
+
+        .eye-icon svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .pwd-strength {
+            font-size: 11px;
+            color: #28a745;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .pwd-strength svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        .options {
+            margin-bottom: 32px;
+            margin-top: 16px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 13px;
+            color: #495057;
+            user-select: none;
+        }
+
+        .checkbox-container input {
+            margin-right: 10px;
+            accent-color: #000;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            outline: none;
+            margin-bottom: 12px;
+        }
+
+        .btn-primary {
+            background: #000;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #222;
+        }
+
+        .btn-secondary {
+            background: #0d6efd;
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: #0b5ed7;
+        }
+
+        .footer-links {
+            text-align: center;
+            margin-top: 32px;
+            font-size: 13px;
+        }
+
+        .footer-links a {
+            color: #6c757d;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: #000;
+        }
+
+        /* Footer Styles */
+        .footer {
+            background: #fff;
+            padding: 80px 0 60px;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            margin-top: 0;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 60px;
+            padding: 0 32px;
+        }
+
+        .footer-links-grid {
+            display: flex;
+            gap: 80px;
+        }
+
+        .footer-group h4 {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #212529;
+        }
+
+        .footer-group a {
+            display: block;
+            color: #6c757d;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 14px;
+            transition: all 0.2s;
+        }
+
+        .footer-group a:hover {
+            color: #FF6B6B;
+            transform: translateX(4px);
+        }
+
+        .social-section h4 {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 16px;
+        }
+
+        .social-links a {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .social-links a img {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+        }
+
+        .social-links a:hover {
+            transform: translateY(-5px);
+            background: #fff;
+            border-color: #FF6B6B;
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.15);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 60px auto 0;
+            padding: 32px 32px 0;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            text-align: center;
+            color: #6c757d;
+            font-size: 13px;
+        }
+
+        @media (max-width: 768px) {
+            .image-section {
+                display: none;
+            }
+
+            .form-section {
+                max-width: 100%;
+                padding: 24px;
+            }
+
+            .form-container {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="split-layout">
+        <!-- Left Side: Background Image -->
+        <div class="image-section"></div>
+
+        <!-- Right Side: Login/Register Form -->
+        <div class="form-section">
+            <div class="form-container">
+
+                <div style="text-align:center; margin-bottom:8px;">
+                    <img src="assets/images/LOGO.png" alt="CHEHRS Logo"
+                        style="width:240px; height:240px; object-fit:contain;">
+                </div>
+                <h2 id="formTitle" style="text-align:center;">COMMUNITY HEALTH & ENVIRONMENTAL HAZARD REPORTING SYSTEM</h2>
+                <p class="subtitle" id="formSubtitle" style="text-align:center;">Sign in to your account</p>
+
+                <!-- Toast notification -->
+                <div id="toast"
+                    style="display:none;position:absolute;top:24px;right:24px;padding:12px 20px;border-radius:8px;font-size:13px;z-index:100;animation:slideUp .4s ease;max-width:300px;">
+                </div>
+
+                <form id="authForm" onsubmit="event.preventDefault();">
+
+                    <!-- Registration fields -->
+                    <div class="input-group" id="usernameGroup" style="display:none;">
+                        <label for="usernameInput">Full Name</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="usernameInput" placeholder="Your full name">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="emailInput">Enter your email</label>
+                        <div class="input-wrapper">
+                            <input type="email" id="emailInput" placeholder="name@example.com" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="passInput" id="passLabel">Password</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="passInput" placeholder="••••••••" required
+                                oninput="checkStrength()">
+                            <span class="eye-icon" onclick="togglePassword()">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </span>
+                        </div>
+                        <div class="pwd-strength" id="pwdStrength" style="display:none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span id="pwdText">Good password</span>
+                        </div>
+                    </div>
+
+                    <div class="input-group" id="districtGroup" style="display:none;">
+                        <label for="districtInput">District</label>
+                        <div class="input-wrapper">
+                            <select id="districtInput">
+                                <option value="">Loading districts...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="options">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="remember" checked>
+                            Remember me for 30 days
+                        </label>
+                        <a href="javascript:void(0)" id="forgotLink" onclick="openForgotPassword()"
+                            style="font-size:13px; color:#FF6B6B; text-decoration:none; font-weight:500;">Forgot
+                            password?</a>
+                    </div>
+
+                    <!-- Buttons match screenshot layout -->
+                    <button type="button" class="btn btn-primary" id="primaryBtn" onclick="handleLogin()">Log
+                        In</button>
+                    <button type="button" class="btn btn-secondary" id="toggleBtn"
+                        onclick="toggleMode()">Register</button>
+
+                    <div class="footer-links">
+                        <a href="civilian/track_report.html"> Track a Report</a> &nbsp;|&nbsp; <a
+                            href="civilian/community_map.html"> Hazard Map</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+                    <img src="assets/images/LOGO.png" alt="CHEHRS Logo"
+                        style="width:44px; height:44px; object-fit:contain; border-radius:10px;">
+                    <span style="font-weight:700; font-size:20px; color:#212529; letter-spacing:-0.5px;">Community <span
+                            style="color:#FF6B6B;">Hazard</span> Report</span>
+                </div>
+                <p style="color:#6c757d; font-size:14px; line-height:1.7; max-width:320px; margin-bottom:0;">
+                    Empowering civilians to build safer environments through real-time hazard tracking and
+                    community-driven reporting.
+                </p>
+            </div>
+
+            <div class="footer-links-grid">
+                <div class="footer-group">
+                    <h4>Platform</h4>
+                    <a href="index.html">Login Portal</a>
+                    <a href="civilian/track_report.html">Track Status</a>
+                    <a href="civilian/community_map.html">Hazard Map</a>
+                </div>
+            </div>
+        </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Community Hazard Reporting System. Engineered for safety.</p>
+        </div>
+    </footer>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotModal"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; display:none; align-items:center; justify-content:center;">
+        <div
+            style="background:#fff; border-radius:16px; padding:32px; max-width:400px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <h3 style="margin-bottom:8px; font-size:20px;">Reset Password</h3>
+            <p style="color:#6c757d; font-size:13px; margin-bottom:20px;">Enter your email and a new password below.</p>
+            <div id="forgotToast"
+                style="display:none; padding:10px; border-radius:8px; font-size:13px; margin-bottom:12px; color:#fff;">
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="font-size:13px; font-weight:600; margin-bottom:6px; display:block;">Email Address</label>
+                <input type="email" id="forgotEmail" placeholder="name@example.com"
+                    style="width:100%; padding:10px 14px; border:1px solid rgba(0,0,0,0.1); border-radius:10px; font-family:inherit; font-size:14px; outline:none;">
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="font-size:13px; font-weight:600; margin-bottom:6px; display:block;">New Password</label>
+                <input type="password" id="forgotNewPass" placeholder="Min 6 characters"
+                    style="width:100%; padding:10px 14px; border:1px solid rgba(0,0,0,0.1); border-radius:10px; font-family:inherit; font-size:14px; outline:none;">
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="font-size:13px; font-weight:600; margin-bottom:6px; display:block;">Confirm New
+                    Password</label>
+                <input type="password" id="forgotConfirmPass" placeholder="Re-enter new password"
+                    style="width:100%; padding:10px 14px; border:1px solid rgba(0,0,0,0.1); border-radius:10px; font-family:inherit; font-size:14px; outline:none;">
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button onclick="submitForgotPassword()"
+                    style="flex:1; padding:10px; background:#FF6B6B; color:#fff; border:none; border-radius:10px; font-family:inherit; font-weight:600; font-size:14px; cursor:pointer;">Reset
+                    Password</button>
+                <button onclick="closeForgotPassword()"
+                    style="flex:1; padding:10px; background:#f1f3f5; color:#212529; border:none; border-radius:10px; font-family:inherit; font-weight:600; font-size:14px; cursor:pointer;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isRegisterMode = false;
+
+        function togglePassword() {
+            const input = document.getElementById('passInput');
+            if (input.type === 'password') {
+                input.type = 'text';
+            } else {
+                input.type = 'password';
+            }
+        }
+
+        function checkStrength() {
+            // Only show password strength during registration, not login
+            if (!isRegisterMode) return;
+            const val = document.getElementById('passInput').value;
+            const indicator = document.getElementById('pwdStrength');
+            const text = document.getElementById('pwdText');
+
+            if (val.length === 0) {
+                indicator.style.display = 'none';
+            } else if (val.length < 6) {
+                indicator.style.display = 'flex';
+                indicator.style.color = '#dc3545'; // red
+                text.textContent = 'Weak password';
+            } else {
+                indicator.style.display = 'flex';
+                indicator.style.color = '#28a745'; // green
+                text.textContent = 'Good password';
+            }
+        }
+
+        function toggleMode() {
+            isRegisterMode = !isRegisterMode;
+            document.getElementById('usernameGroup').style.display = isRegisterMode ? 'block' : 'none';
+            document.getElementById('districtGroup').style.display = isRegisterMode ? 'block' : 'none';
+
+            // Reset password field and hide strength indicator
+            document.getElementById('passInput').value = '';
+            document.getElementById('pwdStrength').style.display = 'none';
+
+            if (isRegisterMode) {
+                document.getElementById('formTitle').textContent = 'Create Account';
+                document.getElementById('formSubtitle').textContent = 'Join the community hazard report network';
+                document.getElementById('passLabel').textContent = 'Set a password';
+                document.getElementById('primaryBtn').textContent = 'Register';
+                document.getElementById('primaryBtn').onclick = handleRegister;
+                document.getElementById('toggleBtn').textContent = 'Log in to an existing account';
+                document.getElementById('forgotLink').style.display = 'none';
+            } else {
+                document.getElementById('formTitle').textContent = 'Community Hazard';
+                document.getElementById('formSubtitle').textContent = 'Sign in to your account';
+                document.getElementById('passLabel').textContent = 'Password';
+                document.getElementById('primaryBtn').textContent = 'Log In';
+                document.getElementById('primaryBtn').onclick = handleLogin;
+                document.getElementById('toggleBtn').textContent = 'Create an account';
+                document.getElementById('forgotLink').style.display = 'inline';
+            }
+        }
+
+        function showToast(msg, isError = false) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.display = 'block';
+            t.style.background = isError ? '#dc3545' : '#28a745';
+            t.style.color = '#fff';
+            setTimeout(() => t.style.display = 'none', 4000);
+        }
+
+        async function handleRegister() {
+            const username = document.getElementById('usernameInput').value.trim();
+            const email = document.getElementById('emailInput').value.trim();
+            const pass = document.getElementById('passInput').value;
+            const district = document.getElementById('districtInput').value;
+
+            if (!username || !email || !pass) {
+                showToast('Please fill in all required fields.', true);
+                return;
+            }
+            if (pass.length < 6) {
+                showToast('Password must be at least 6 characters.', true);
+                return;
+            }
+
+            try {
+                const res = await fetch('api/auth/register.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password: pass, district })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Registration successful! Redirecting...');
+                    setTimeout(() => window.location.href = 'civilian/civilian_dashboard.html', 1500);
+                } else {
+                    showToast(data.message, true);
+                }
+            } catch (e) {
+                showToast('Connection error. Is XAMPP running?', true);
+            }
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('emailInput').value.trim();
+            const pass = document.getElementById('passInput').value;
+
+            if (!email || !pass) {
+                showToast('Please fill in email and password.', true);
+                return;
+            }
+
+            try {
+                const res = await fetch('api/auth/login.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password: pass })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Welcome back, ' + data.user.name + '!');
+                    setTimeout(() => window.location.href = data.redirect, 1500);
+                } else {
+                    showToast(data.message, true);
+                }
+            } catch (e) {
+                showToast('Connection error. Is XAMPP running?', true);
+            }
+        }
+
+        function openForgotPassword() {
+            document.getElementById('forgotModal').style.display = 'flex';
+            document.getElementById('forgotEmail').value = document.getElementById('emailInput').value || '';
+            document.getElementById('forgotNewPass').value = '';
+            document.getElementById('forgotConfirmPass').value = '';
+            document.getElementById('forgotToast').style.display = 'none';
+        }
+
+        function closeForgotPassword() {
+            document.getElementById('forgotModal').style.display = 'none';
+        }
+
+        function showForgotToast(msg, isError) {
+            const t = document.getElementById('forgotToast');
+            t.textContent = msg;
+            t.style.display = 'block';
+            t.style.background = isError ? '#dc3545' : '#28a745';
+        }
+
+        async function submitForgotPassword() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            const newPass = document.getElementById('forgotNewPass').value;
+            const confirmPass = document.getElementById('forgotConfirmPass').value;
+
+            if (!email || !newPass) {
+                showForgotToast('Please fill in all fields.', true);
+                return;
+            }
+            if (newPass.length < 6) {
+                showForgotToast('Password must be at least 6 characters.', true);
+                return;
+            }
+            if (newPass !== confirmPass) {
+                showForgotToast('Passwords do not match.', true);
+                return;
+            }
+
+            try {
+                const res = await fetch('api/auth/forgot_password.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, new_password: newPass })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showForgotToast(data.message, false);
+                    setTimeout(() => {
+                        closeForgotPassword();
+                        showToast('Password reset! You can now log in.');
+                    }, 2000);
+                } else {
+                    showForgotToast(data.message, true);
+                }
+            } catch (e) {
+                showForgotToast('Connection error. Is XAMPP running?', true);
+            }
+        }
+
+        // Check if already logged in
+        fetch('api/auth/profile.php').then(r => r.json()).then(d => {
+            if (d.logged_in) {
+                const redirect = { admin: 'admin/admin_dashboard.html', officer: 'officer/officer_dashboard.html', civilians: 'civilian/civilian_dashboard.html' };
+                window.location.href = redirect[d.user.role] || 'civilian/civilian_dashboard.html';
+            }
+        }).catch(() => { });
+
+        // Load locations dynamically
+        fetch('api/locations.php').then(r => r.json()).then(data => {
+            const select = document.getElementById('districtInput');
+            select.innerHTML = '<option value="">Select district</option>';
+            for (const [state, districts] of Object.entries(data)) {
+                const group = document.createElement('optgroup');
+                group.label = state;
+                districts.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d;
+                    opt.textContent = d;
+                    group.appendChild(opt);
+                });
+                select.appendChild(group);
+            }
+        }).catch(() => {
+            document.getElementById('districtInput').innerHTML = '<option value="">Error loading districts</option>';
+        });
+    </script>
+</body>
+
+</html>
